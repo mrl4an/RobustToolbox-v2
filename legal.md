@@ -58,7 +58,7 @@ All images in this repository (the placeholder textures below) were drawn by mrl
 * `Resources/Textures/Interface/Default/cross.png`
 * `Resources/Textures/Interface/tilebuildoverlay.png`
 
-The fallback soundfont `Resources/Midi/fallback.sf2` is a third-party file published with no rights reserved (source: <https://musical-artifacts.com/artifacts/9429>, see `Resources/Midi/copyright.txt`).
+The fallback soundfont `Resources/Midi/fallback.sf2` is a third-party file that its publisher released under CC0 1.0 Universal (source: <https://musical-artifacts.com/artifacts/9429>, see `Resources/Midi/copyright.txt`).
 
 The fonts in `Resources/EngineFonts/NotoSans/` are third-party and keep their own licenses:
 

@@ -1,3 +1,4 @@
 fallback.sf2 is a minimal soundfont with a single sine-wave "Theremin" instrument (bank 0, program 0).
 Source: https://musical-artifacts.com/artifacts/9429
-It is used here as published, with no rights reserved (no usage restrictions).
+License: CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/
+It is used here as published.
