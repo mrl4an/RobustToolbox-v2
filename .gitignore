@@ -1,0 +1,65 @@
+# Files that must not be committed, grouped by the tool or purpose that produces them.
+
+# Build and packaging output
+bin/
+obj/
+release/
+*.pdb
+
+# Generated documentation
+Robust.Docfx/*-site
+Robust.Docfx/api
+
+# NuGet
+/.nuget
+/packages/
+*.nupkg
+*.nuget.props
+project.lock.json
+
+# Local build customization (each developer keeps their own copy)
+MSBuild/Robust.Custom.targets
+
+# Visual Studio and ReSharper
+.vs/
+*.suo
+*.user
+*.userosscache
+*.userprefs
+*.sln.docstates
+*.ide/
+*.vspscc
+*.vssscc
+*.psess
+*.vsp
+*.vspx
+*.DotSettings.user
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Other editors
+.idea/
+.vscode/
+*.pidb
+
+# Test results and logs
+[Tt]est[Rr]esult*/
+TestResult.xml
+[Bb]uild[Ll]og.*
+*.svclog
+
+# Operating system and file manager leftovers
+.DS_Store
+.directory
+.sync/
+
+# Python caches
+__pycache__
+.mypy_cache
+
+# Backup files and older entries that are kept for compatibility
+*.bak
+.builds
+*.resources
+/Media
+/setenv.bat

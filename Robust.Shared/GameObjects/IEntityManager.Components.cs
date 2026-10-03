@@ -1,0 +1,661 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+
+namespace Robust.Shared.GameObjects
+{
+    [NotContentImplementable]
+    public partial interface IEntityManager
+    {
+        /// <summary>
+        ///     A component was added to the manager.
+        /// </summary>
+        event Action<AddedComponentEventArgs>? ComponentAdded;
+
+        /// <summary>
+        ///     A component was removed from the manager.
+        /// </summary>
+        event Action<RemovedComponentEventArgs>? ComponentRemoved;
+
+        /// <summary>
+        ///     Calls Initialize() on all registered components of the entity.
+        /// </summary>
+        [Obsolete("Use InitializeEntity")]
+        void InitializeComponents(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Calls Startup() on all registered components of the entity.
+        /// </summary>
+        [Obsolete("Use StartEntity")]
+        void StartComponents(EntityUid uid);
+
+        /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        public int Count<T>() where T : IComponent;
+
+        /// <summary>
+        /// Gets the number of a specific component.
+        /// </summary>
+        int Count(Type component);
+
+        /// <summary>
+        /// Adds the specified components from the <see cref="EntityPrototype"/>
+        /// </summary>
+        void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
+
+        /// <summary>
+        /// Adds the specified registry components to the target entity.
+        /// </summary>
+        void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
+
+        /// <summary>
+        /// Removes the specified entity prototype components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, EntityPrototype prototype);
+
+        /// <summary>
+        /// Removes the specified registry components from the target entity.
+        /// </summary>
+        void RemoveComponents(EntityUid target, ComponentRegistry registry);
+
+        /// <summary>
+        ///     Creates a new component of type <typeparamref name="T"/>, attaches it to an entity and returns it.
+        ///     If the entity has already been initialized, the new component is initialized and started right away.
+        /// </summary>
+        /// <typeparam name="T">The component type to create.</typeparam>
+        /// <param name="uid">The entity to add the component to.</param>
+        /// <returns>The newly created component.</returns>
+        /// <exception cref="Exception">
+        ///     The entity does not exist, or it already has a component of type <typeparamref name="T"/>
+        ///     (or a component instance that implements it).
+        /// </exception>
+        T AddComponent<T>(EntityUid uid) where T : IComponent, new();
+
+        /// <summary>
+        ///     Adds a Component with a given network id to an entity.
+        /// </summary>
+        IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Attaches an already constructed component instance to an entity.
+        ///     If the entity has already been initialized, the component is initialized and started right away.
+        /// </summary>
+        /// <typeparam name="T">The component type the instance is registered as.</typeparam>
+        /// <param name="uid">The entity to add the component to.</param>
+        /// <param name="component">The component instance to attach. It must not already belong to another entity.</param>
+        /// <param name="overwrite">
+        ///     If true, an existing component of the same type is replaced.
+        ///     If false, an existing component of that type causes an exception.
+        /// </param>
+        /// <param name="metadata">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <exception cref="Exception">
+        ///     The entity does not exist, or <paramref name="overwrite"/> is false and the entity already has a component of type
+        ///     <typeparamref name="T"/>.
+        /// </exception>
+        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent;
+
+        /// <summary>
+        ///     Removes the component with the specified reference type,
+        ///     Without needing to have the component itself.
+        /// </summary>
+        /// <typeparam name="T">The component reference type to remove.</typeparam>
+        /// <param name="uid">The entity to remove the component from.</param>
+        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        ///     Removes a component, identified by a runtime type, from an entity. The component is shut down and
+        ///     removed immediately.
+        /// </summary>
+        /// <param name="uid">The entity to remove the component from.</param>
+        /// <param name="type">A component type or trait interface. The first component assignable to it is removed.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if a matching component was found and removed, false otherwise.</returns>
+        bool RemoveComponent(EntityUid uid, Type type, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Removes the component with the given network ID from an entity. The component is shut down and
+        ///     removed immediately.
+        /// </summary>
+        /// <param name="uid">The entity to remove the component from.</param>
+        /// <param name="netID">The network ID of the component to remove.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if a component with that network ID was found and removed, false otherwise.</returns>
+        bool RemoveComponent(EntityUid uid, ushort netID, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Removes a specific component instance from an entity. The component is shut down and
+        ///     removed immediately.
+        /// </summary>
+        /// <param name="uid">The entity to remove the component from.</param>
+        /// <param name="component">The component instance to remove.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <exception cref="Exception">The component does not belong to the given entity.</exception>
+        void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
+        ///     Without needing to have the component itself.
+        /// </summary>
+        /// <typeparam name="T">The component reference type to remove.</typeparam>
+        /// <param name="uid">The entity to remove the component from.</param>
+        bool RemoveComponentDeferred<T>(EntityUid uid);
+
+        /// <summary>
+        ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
+        /// </summary>
+        /// <param name="uid">The entity that holds the component.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Removes the component with the given network ID from an entity. The component is shut down
+        ///     immediately, but its actual removal is deferred until <see cref="CullRemovedComponents"/> runs
+        ///     (normally at the end of the tick).
+        /// </summary>
+        /// <param name="uid">The entity to modify.</param>
+        /// <param name="netID">The network ID of the component to remove.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool RemoveComponentDeferred(EntityUid uid, ushort netID, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Removes a specific component instance from an entity. The component is shut down immediately,
+        ///     but its actual removal is deferred until <see cref="CullRemovedComponents"/> runs
+        ///     (normally at the end of the tick).
+        /// </summary>
+        /// <param name="uid">The entity to modify.</param>
+        /// <param name="component">The component instance to remove.</param>
+        /// <exception cref="Exception">The component does not belong to the given entity.</exception>
+        void RemoveComponentDeferred(EntityUid uid, IComponent component);
+
+        /// <summary>
+        ///     Removes every component from an entity except the required ones
+        ///     (normally <see cref="MetaDataComponent"/> and <see cref="TransformComponent"/>).
+        ///     Each removed component is shut down and removed immediately.
+        /// </summary>
+        /// <param name="uid">The entity to strip of components.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        void RemoveComponents(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Removes ALL components from an entity. This includes the required components,
+        ///     <see cref="TransformComponent"/> and <see cref="MetaDataComponent"/>. This should ONLY be
+        ///     used when deleting an entity.
+        /// </summary>
+        /// <param name="uid">The entity whose components are all removed.</param>
+        void DisposeComponents(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Checks whether an entity has a component assignable to <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The component type to look for.</typeparam>
+        /// <param name="uid">The entity to check.</param>
+        /// <returns>True if such a component exists, false otherwise.</returns>
+        bool HasComponent<T>(EntityUid uid) where T : IComponent;
+
+        /// <summary>
+        ///     Nullable-entity variant of <see cref="HasComponent{T}(EntityUid)"/>.
+        /// </summary>
+        /// <typeparam name="T">The component type to look for.</typeparam>
+        /// <param name="uid">The entity to check; may be null.</param>
+        /// <returns>
+        ///     True if <paramref name="uid"/> is not null and the entity has such a component, false otherwise.
+        ///     When true is returned, the compiler knows <paramref name="uid"/> is non-null.
+        /// </returns>
+        bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent;
+
+        /// <summary>
+        ///     Checks whether an entity has a component described by a component registration.
+        /// </summary>
+        /// <param name="uid">The entity to check.</param>
+        /// <param name="reg">The registration of the component type to look for.</param>
+        /// <returns>True if the entity has a component with that registration, false otherwise.</returns>
+        bool HasComponent(EntityUid uid, ComponentRegistration reg);
+
+        /// <summary>
+        ///     Checks whether an entity has a component assignable to a runtime type.
+        /// </summary>
+        /// <param name="uid">The entity to check.</param>
+        /// <param name="type">The component type to look for.</param>
+        /// <returns>True if such a component exists, false otherwise.</returns>
+        bool HasComponent(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Nullable-entity variant of <see cref="HasComponent(EntityUid, Type)"/>.
+        /// </summary>
+        /// <param name="uid">The entity to check; may be null.</param>
+        /// <param name="type">The component type to look for.</param>
+        /// <returns>
+        ///     True if <paramref name="uid"/> is not null and the entity has such a component, false otherwise.
+        /// </returns>
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type);
+
+        /// <summary>
+        ///     Checks whether an entity has a component with the given network ID.
+        ///     A component that is already marked for deletion still counts.
+        /// </summary>
+        /// <param name="uid">The entity to check.</param>
+        /// <param name="netId">The network ID to look for.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if a component with that network ID exists on the entity, false otherwise.</returns>
+        bool HasComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Nullable-entity variant of <see cref="HasComponent(EntityUid, ushort, MetaDataComponent)"/>.
+        /// </summary>
+        /// <param name="uid">The entity to check; may be null.</param>
+        /// <param name="netId">The network ID to look for.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>
+        ///     True if <paramref name="uid"/> is not null and the entity has a component with that network ID,
+        ///     false otherwise.
+        /// </returns>
+        bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>The component in question</returns>
+        T EnsureComponent<T>(EntityUid uid) where T : IComponent, new();
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <param name="component">The output component after being ensured.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>True if the component already existed</returns>
+        bool EnsureComponent<T>(EntityUid uid, out T component) where T : IComponent, new();
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="entity">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>True if the component already existed</returns>
+        bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new();
+
+        /// <summary>
+        ///     Gets the component assignable to <typeparamref name="T"/> from an entity.
+        /// </summary>
+        /// <typeparam name="T">The component type to retrieve.</typeparam>
+        /// <param name="uid">The entity to read from.</param>
+        /// <returns>The matching component.</returns>
+        /// <exception cref="Exception">The entity does not exist or has no such component.</exception>
+        T GetComponent<T>(EntityUid uid) where T : IComponent;
+
+        /// <summary>
+        ///     Gets a component from an entity using a cached component index for a fast lookup.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="type">The component index identifying the component type.</param>
+        /// <returns>The matching component.</returns>
+        /// <exception cref="Exception">The entity has no component at that index.</exception>
+        IComponent GetComponent(EntityUid uid, CompIdx type);
+
+        /// <summary>
+        ///     Gets the component assignable to a runtime type from an entity.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="type">The component type to retrieve.</param>
+        /// <returns>The matching component.</returns>
+        /// <exception cref="Exception">The entity has no such component.</exception>
+        IComponent GetComponent(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Returns the component with a specific network ID. This does not check
+        ///     if the component is deleted.
+        /// </summary>
+        /// <param name="uid">The entity to search.</param>
+        /// <param name="netId">Network ID of the component to retrieve.</param>
+        /// <returns>The component that has the given network id.</returns>
+        IComponent GetComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Gets a component by component index, even if it was already shut down and marked for deferred
+        ///     removal but has not been culled yet by <see cref="CullRemovedComponents"/>.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="type">The component index identifying the component type.</param>
+        /// <returns>The matching component, including one that is scheduled for removal.</returns>
+        /// <exception cref="Exception">The entity has no such component.</exception>
+        IComponent GetComponentInternal(EntityUid uid, CompIdx type);
+
+        /// <summary>
+        ///     Tries to get the component assignable to <typeparamref name="T"/> from an entity.
+        /// </summary>
+        /// <typeparam name="T">The component type to retrieve.</typeparam>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?;
+
+        /// <summary>
+        ///     Nullable-entity variant of <see cref="TryGetComponent{T}(EntityUid, out T)"/>.
+        /// </summary>
+        /// <typeparam name="T">The component type to retrieve.</typeparam>
+        /// <param name="uid">The entity to read from; may be null.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if <paramref name="uid"/> is not null and the component was found, false otherwise.</returns>
+        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent?;
+
+        /// <summary>
+        ///     Tries to get a component described by a component registration from an entity.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="reg">The registration of the component type to retrieve.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Tries to get the component assignable to a runtime type from an entity.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="type">The component type to retrieve.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Tries to get a component from an entity using a cached component index.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="type">The component index identifying the component type.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Nullable-entity variant of <see cref="TryGetComponent(EntityUid, Type, out IComponent)"/>.
+        /// </summary>
+        /// <param name="uid">The entity to read from; may be null.</param>
+        /// <param name="type">The component type to retrieve.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if <paramref name="uid"/> is not null and the component was found, false otherwise.</returns>
+        bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Tries to get the component with the given network ID from an entity.
+        ///     A component that is already marked for deletion is not filtered out.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="netId">The network ID of the component.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        bool TryGetComponent(EntityUid uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Nullable-entity variant of
+        ///     <see cref="TryGetComponent(EntityUid, ushort, out IComponent, MetaDataComponent)"/>.
+        /// </summary>
+        /// <param name="uid">The entity to read from; may be null.</param>
+        /// <param name="netId">The network ID of the component.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>True if <paramref name="uid"/> is not null and the component was found, false otherwise.</returns>
+        bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the component doesn't exist.
+        /// </summary>
+        bool TryCopyComponent<T>(
+            EntityUid source,
+            EntityUid target,
+            ref T? sourceComponent,
+            [NotNullWhen(true)] out T? targetComp,
+            MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the components don't exist.
+        /// </summary>
+        bool TryCopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params Type[] sourceComponents);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <typeparam name="T">The type of component to copy.</typeparam>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Copy multiple components from source to target entity using existing component instances.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        /// <param name="sourceComponents">Array of component instances to copy.</param>
+        void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
+
+        /// <summary>
+        /// Returns a cached struct enumerator with the specified component.
+        /// </summary>
+        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent;
+
+        EntityQuery<IComponent> GetEntityQuery(Type type);
+
+        /// <summary>
+        ///     Enumerates all components on an entity. An instance that implements several component types may
+        ///     be yielded more than once.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <returns>All component instances on the entity.</returns>
+        IEnumerable<IComponent> GetComponents(EntityUid uid);
+
+        /// <summary>
+        ///     Enumerates all components on an entity that are assignable to <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type to filter by.</typeparam>
+        /// <param name="uid">The entity to read from.</param>
+        /// <returns>The matching component instances.</returns>
+        IEnumerable<T> GetComponents<T>(EntityUid uid);
+
+        /// <summary>
+        /// Returns the number of components on this entity.
+        /// </summary>
+        int ComponentCount(EntityUid uid);
+
+        /// <summary>
+        ///     Enumerates all components of an entity that have a network ID, including ones already
+        ///     marked for deletion.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>An enumerable over the entity's network components.</returns>
+        NetComponentEnumerable GetNetComponents(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Like <see cref="GetNetComponents"/>, but returns null instead of failing when the entity does not exist.
+        /// </summary>
+        /// <param name="uid">The entity to read from.</param>
+        /// <param name="meta">Optional, already fetched <see cref="MetaDataComponent"/> of the entity, to avoid a lookup.</param>
+        /// <returns>An enumerable over the entity's network components, or null if the entity does not exist.</returns>
+        public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Gets a component state.
+        /// </summary>
+        /// <param name="eventBus">A reference to the event bus instance.</param>
+        /// <param name="component">Component to generate the state for.</param>
+        /// <param name="player">The player that is going to receive this state. Null implies that this state is for a replay.</param>
+        /// <param name="fromTick">The from tick, which indicates the range of data that must be included for delta-states.</param>
+        /// <returns>The component state of the component.</returns>
+        IComponentState? GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? player, GameTick fromTick);
+
+        /// <summary>
+        ///     Checks if a certain player should get a component state.
+        /// </summary>
+        /// <param name="eventBus">A reference to the event bus instance.</param>
+        /// <param name="component">Component to generate the state for.</param>
+        /// <param name="player">The player to generate the state for.</param>
+        /// <returns>True if the player should get the component state.</returns>
+        bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
+
+        /// <summary>
+        /// Returns all instances of a component in an array.
+        /// Use sparingly.
+        /// </summary>
+        (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<T>[] AllEntities<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<IComponent>[] AllEntities(Type tComp);
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids(Type tComp);
+
+        /// <summary>
+        /// Returns all instances of a component in a List.
+        /// Use sparingly.
+        /// </summary>
+        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent;
+
+        /// <summary>
+        /// <see cref="ComponentQueryEnumerator"/>
+        /// </summary>
+        public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
+
+        /// <summary>
+        /// <see cref="CompRegistryQueryEnumerator"/>
+        /// </summary>
+        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+
+        AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
+
+        AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
+            where TComp1 : IComponent;
+
+        AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
+
+        AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
+
+        AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
+
+        EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
+            where TComp1 : IComponent;
+
+        EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
+
+        EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
+
+        EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
+
+        /// <summary>
+        ///     Enumerates every component assignable to <typeparamref name="T"/> across all entities.
+        ///     This walks many entities, so use it sparingly; for repeated lookups prefer a cached query from
+        ///     <see cref="GetEntityQuery{TComp1}"/>.
+        /// </summary>
+        /// <typeparam name="T">The component type to enumerate.</typeparam>
+        /// <param name="includePaused">If true, components on paused entities are included; by default they are skipped.</param>
+        /// <returns>All matching components.</returns>
+        IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T: IComponent;
+
+        /// <summary>
+        /// Returns the relevant components from all entities that contain the two required components.
+        /// </summary>
+        /// <typeparam name="TComp1">First required component.</typeparam>
+        /// <typeparam name="TComp2">Second required component.</typeparam>
+        /// <returns>The pairs of components from each entity that has the two required components.</returns>
+        IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
+
+        /// <summary>
+        /// Returns the relevant components from all entities that contain the three required components.
+        /// </summary>
+        /// <typeparam name="TComp1">First required component.</typeparam>
+        /// <typeparam name="TComp2">Second required component.</typeparam>
+        /// <typeparam name="TComp3">Third required component.</typeparam>
+        /// <returns>The pairs of components from each entity that has the three required components.</returns>
+        IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
+
+        /// <summary>
+        /// Returns the relevant components from all entities that contain the four required components.
+        /// </summary>
+        /// <typeparam name="TComp1">First required component.</typeparam>
+        /// <typeparam name="TComp2">Second required component.</typeparam>
+        /// <typeparam name="TComp3">Third required component.</typeparam>
+        /// <typeparam name="TComp4">Fourth required component.</typeparam>
+        /// <returns>The pairs of components from each entity that has the four required components.</returns>
+        IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
+
+        /// <summary>
+        ///     Enumerates all components of a given type across all entities, together with the owning entity.
+        /// </summary>
+        /// <param name="type">The component type to enumerate.</param>
+        /// <param name="includePaused">If true, components on paused entities are included; by default they are skipped.</param>
+        /// <returns>Pairs of entity UID and component instance for every match.</returns>
+        IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false);
+
+        /// <summary>
+        ///     Finalizes all removals queued by the deferred remove methods: every component flagged for
+        ///     deletion is dropped from its entity's component collection. Normally called once per tick.
+        ///     Afterwards those components can no longer be reached, not even through internal accessors.
+        /// </summary>
+        void CullRemovedComponents();
+    }
+}
