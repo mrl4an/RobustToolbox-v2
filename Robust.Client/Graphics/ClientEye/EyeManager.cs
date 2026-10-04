@@ -20,7 +20,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// Default scaling for the projection matrix.
         /// </summary>
-        public const int PixelsPerMeter = 32;
+        public const int PixelsPerMeter = 64;
 
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;

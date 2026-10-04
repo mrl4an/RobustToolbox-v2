@@ -14,7 +14,7 @@ void fragment()
     highp float occlDist = occludeDepth(worldSpaceDiff, TEXTURE, 0.75).r;
 
     // *Very* simple biased shadow check for FOV.
-    if (!doesOcclude(worldSpaceDiff, TEXTURE, 0.75, -0.75/32.0))
+    if (!doesOcclude(worldSpaceDiff, TEXTURE, 0.75, -0.75/64.0))
     {
         discard;
     }
