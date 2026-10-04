@@ -100,7 +100,11 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
+        // A state that is a full state (FromTick is zero: new session, nothing acked yet) must always be delivered:
+        // if it is sent unreliably and the server keeps sending "full" states until the first ack arrives, the client
+        // later receives deltas for entities it acked, on top of a state it treats as full (component delta without full state).
         session.ForceSendReliably = session.RequestedFull
+                                          || session.FromTick == GameTick.Zero
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
         return true;
     }
