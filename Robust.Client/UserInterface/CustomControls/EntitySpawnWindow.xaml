@@ -1,5 +1,5 @@
 <EntitySpawnWindow
-    xmlns="https://spacestation14.io"
+    xmlns="urn:robust-toolbox:ui"
     Title="{Loc entity-spawn-window-title}"
     SetSize="350 400"
     MinSize="350 200">

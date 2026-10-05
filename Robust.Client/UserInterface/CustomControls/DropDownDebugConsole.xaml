@@ -1,4 +1,4 @@
-<Control xmlns="https://spacestation14.io">
+<Control xmlns="urn:robust-toolbox:ui">
     <LayoutContainer>
         <DebugConsole Name="MainControl" Visible="False" />
         <Control Name="BelowConsole" Access="Public" />

@@ -1,4 +1,4 @@
-﻿<Popup xmlns="https://spacestation14.io"
+﻿<Popup xmlns="urn:robust-toolbox:ui"
        xmlns:gfx="clr-namespace:Robust.Client.Graphics">
     <PanelContainer>
         <PanelContainer.PanelOverride>

@@ -1,5 +1,5 @@
 <TileSpawnWindow
-    xmlns="https://spacestation14.io"
+    xmlns="urn:robust-toolbox:ui"
     Title="{Loc tile-spawn-window-title}"
     SetSize="300 300"
     MinSize="300 200">

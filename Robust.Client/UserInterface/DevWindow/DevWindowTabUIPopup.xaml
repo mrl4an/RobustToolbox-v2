@@ -1,4 +1,4 @@
-﻿<DevWindowTabUIPopup xmlns="https://spacestation14.io"
+﻿<DevWindowTabUIPopup xmlns="urn:robust-toolbox:ui"
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                 x:Class="Robust.Client.UserInterface.DevWindowTabUIPopup"
                 xmlns:gfx="clr-namespace:Robust.Client.Graphics">

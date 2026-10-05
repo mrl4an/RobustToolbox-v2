@@ -1,4 +1,4 @@
-<Control xmlns="https://spacestation14.io"
+<Control xmlns="urn:robust-toolbox:ui"
          xmlns:gfx="clr-namespace:Robust.Client.Graphics">
     <BoxContainer Orientation="Vertical">
         <OutputPanel Name="Output" VerticalExpand="True" StyleClasses="monospace" ShowScrollDownButton="True">

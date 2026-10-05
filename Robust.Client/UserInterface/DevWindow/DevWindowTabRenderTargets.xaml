@@ -1,4 +1,4 @@
-﻿<Control xmlns="https://spacestation14.io"
+﻿<Control xmlns="urn:robust-toolbox:ui"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
          x:Class="Robust.Client.UserInterface.DevWindowTabRenderTargets">
     <BoxContainer Orientation="Vertical">
