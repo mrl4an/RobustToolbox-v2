@@ -930,7 +930,10 @@ namespace Robust.Shared.Network
             {
                 _awaitingStatusChange.Remove(sender);
                 awaiter.Item1.Dispose();
-                awaiter.Item2.SetResult(reason);
+                // TrySetResult: the wait may already be cancelled (timeout, a second connect attempt, the user
+                // disconnecting) on another thread while this status change is being processed. SetResult would
+                // throw InvalidOperationException here and crash the client.
+                awaiter.Item2.TrySetResult(reason);
                 return;
             }
 
