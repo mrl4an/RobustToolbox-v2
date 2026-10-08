@@ -44,6 +44,8 @@
     <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageVersion Include="Nett" Version="0.15.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <!-- Reads MP3 for the music streams (Robust.Client/Audio/Music). Pure C#, MIT. -->
+    <PackageVersion Include="NLayer" Version="1.16.0" />
     <PackageVersion Include="OpenTK.Audio.OpenAL" Version="4.9.4" />
     <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageVersion Include="Pidgin" Version="3.5.1" />

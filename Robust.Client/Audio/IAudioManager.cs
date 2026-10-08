@@ -18,5 +18,12 @@ public interface IAudioManager
 
     AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null);
 
+    /// <summary>
+    /// Opens a long piece of music (MP3 or Ogg Vorbis) that is read and decoded piece by piece while it plays: see <see cref="IMusicStream"/>.
+    /// The stream is owned by the result and closed with it. Null (and an error in the log, never an exception) if it cannot be opened or there is no
+    /// sound device.
+    /// </summary>
+    IMusicStream? OpenMusic(Stream stream, string? name = null);
+
     void SetMasterGain(float gain);
 }

@@ -227,6 +227,20 @@ internal partial class AudioManager
         return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
+    /// <inheritdoc/>
+    public IMusicStream? OpenMusic(Stream stream, string? name = null)
+    {
+        try
+        {
+            return Music.MusicStream.Open(this, stream, name ?? "music");
+        }
+        catch (Exception e)
+        {
+            OpenALSawmill.Warning($"Cannot open the music {name}: {e.Message}");
+            return null;
+        }
+    }
+
     public void SetMasterGain(float newGain)
     {
         if (newGain < 0f)

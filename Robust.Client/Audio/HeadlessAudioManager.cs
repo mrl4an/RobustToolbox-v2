@@ -37,6 +37,13 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public IMusicStream? OpenMusic(Stream stream, string? name = null)
+    {
+        stream.Dispose();
+        return null;
+    }
+
+    /// <inheritdoc />
     public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio = false)
     {
         return DummyBufferedAudioSource.Instance;
